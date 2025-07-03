@@ -298,7 +298,18 @@ def setup(args):
     """
     Create configs and perform basic setups.
     """
-    cfg = get_cfg()
+    cfg = get_cfg() #make instance of CfgNode Normal to Normal Setting.
+    #example (.yaml)
+    #MODEL:
+        #META_ARCHTECTURE : "RCNN"
+        #WEIGHTS: ""
+        #MASK_ON: FALSE
+    
+    #INPUT
+        #FORMAT: "BGR"...
+
+
+
     # for poly lr schedule
     add_deeplab_config(cfg)
     add_maskformer2_config(cfg)
@@ -314,15 +325,16 @@ def setup(args):
 
 
 def main(args):
-    cfg = setup(args)
+    cfg = setup(args) #config = setup(args)
 
-    if args.eval_only:
-        model = Trainer.build_model(cfg)
+    if args.eval_only: #if args.eval_only == True, that is evaluation mode using checkpoints
+        model = Trainer.build_model(cfg) 
+        #call build_model(cfg) -> meta_arch_catalog[cfg.MODEL.META_ARCHITECTURE] (ex) execute "GeneralizedRCNN(cfg)" -> nn.Module Return
 
-        total_params = sum(p.numel() for p in model.parameters())
-        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        frozen_params = sum(p.numel() for p in model.parameters() if not p.requires_grad)
-        frozen_params_exclude_text = 0
+        total_params = sum(p.numel() for p in model.parameters()) #parameter num return
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad) #requires_grad = trainable
+        frozen_params = sum(p.numel() for p in model.parameters() if not p.requires_grad) # not requires_grad = not trainable
+        frozen_params_exclude_text = 0 # frozen parameter num excluding text_related params.
         for n, p in model.named_parameters():
             if p.requires_grad:
                 continue
@@ -351,10 +363,10 @@ if __name__ == "__main__":
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)
     launch(
-        main,
+        main, #define main function
         args.num_gpus,
-        num_machines=args.num_machines,
-        machine_rank=args.machine_rank,
-        dist_url=args.dist_url,
-        args=(args,),
+        num_machines=args.num_machines, #GPU Number for distributed Learning
+        machine_rank=args.machine_rank, #check machine rank in multiple GPU
+        dist_url=args.dist_url, 
+        args=(args,), #args tuple. inputted in main arguments
     )
