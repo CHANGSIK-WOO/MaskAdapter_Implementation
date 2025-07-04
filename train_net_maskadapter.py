@@ -44,7 +44,9 @@ from detectron2.evaluation import (
     DatasetEvaluators,
     LVISEvaluator,
     SemSegEvaluator,
-    verify_results,
+    verify_results, 
+    # verify_results(cfg, result) : verifcation function which checks whether model is satisfied with benchmark standard or not
+    #
 )
 from detectron2.projects.deeplab import add_deeplab_config, build_lr_scheduler
 from detectron2.solver.build import maybe_add_gradient_clipping
@@ -335,21 +337,35 @@ def main(args):
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad) #requires_grad = trainable
         frozen_params = sum(p.numel() for p in model.parameters() if not p.requires_grad) # not requires_grad = not trainable
         frozen_params_exclude_text = 0 # frozen parameter num excluding text_related params.
-        for n, p in model.named_parameters():
-            if p.requires_grad:
+        for n, p in model.named_parameters(): 
+        #n : parameter name, p : parameter tensor
+        #linear1.weight torch.size([5, 10])
+        #linear1.bias torch.size([5])
+        #bn1.weight torch.size([5])
+        #bn1.bias torch.size([5])
+
+            if p.requires_grad: #if tranable,
                 continue
-            # ignore text tower
+            # ignore text tower (if ralated to text)
             if 'clip_model.token_embedding' in n or 'clip_model.positional_embedding' in n or 'clip_model.transformer' in n or 'clip_model.ln_final' in n or 'clip_model.text_projection' in n:
+            # clip_model.token_embedding : nn.Embedding, clip_model.ln_final = Text Encoder's final LayerNorm
                 continue
-            frozen_params_exclude_text += p.numel()    
+            frozen_params_exclude_text += p.numel() #only visual frozen
         print(f"total_params: {total_params}, trainable_params: {trainable_params}, frozen_params: {frozen_params}, frozen_params_exclude_text: {frozen_params_exclude_text}")
 
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
-        res = Trainer.test(cfg, model)
+        #cfg.MODEL.WEIGHTS : Path of model weight
+        #if resume == True, resume with optimizer, or just load only weight.
+        #sequence = model.state_dict() -> torch.load(path) -> model.load_state_dict(checkpoint["model"])
+
+        res = Trainer.test(cfg, model) 
+        #just test to validation dataset (res = mIoU, mask AP, and etc.)
+        # {'bbox/AP' : 42.1, 'segm/AP' : 37.5}
         if cfg.TEST.AUG.ENABLED:
-            res.update(Trainer.test_with_TTA(cfg, model))
+            res.update(Trainer.test_with_TTA(cfg, model)) # return result with TTA Test res added.
+        # result = {'bbox/AP' : 42.1, 'segm/AP' : 37.5, 'bbox/AP_tta' : 43.2, 'segm/AP_tta' : 38.4}
         if comm.is_main_process():
             verify_results(cfg, res)
         return res
