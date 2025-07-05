@@ -23,8 +23,8 @@ MODEL:
   MASK_FORMER:
     TEST:
       SEMANTIC_ON: True
-      INSTANCE_ON: False
-      PANOPTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: True
       OBJECT_MASK_THRESHOLD: 0.0
 
 SOLVER:

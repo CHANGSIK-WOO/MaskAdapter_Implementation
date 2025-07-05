@@ -1,5 +1,5 @@
 """
-This file may have been modified by Bytedance Ltd. and/or its affiliates (“Bytedance's Modifications”).
+This file may have been modified by Bytedance Ltd. and/or its affiliates (??�Bytedance's Modifications???).
 All Bytedance's Modifications are Copyright (year) Bytedance Ltd. and/or its affiliates. 
 
 Reference: https://github.com/facebookresearch/Mask2Former/blob/main/train_net.py
@@ -46,7 +46,7 @@ from detectron2.evaluation import (
     SemSegEvaluator,
     verify_results, 
     # verify_results(cfg, result) : verifcation function which checks whether model is satisfied with benchmark standard or not
-    #
+
 )
 from detectron2.projects.deeplab import add_deeplab_config, build_lr_scheduler
 from detectron2.solver.build import maybe_add_gradient_clipping
@@ -69,6 +69,7 @@ from mask_adapter import (
 class Trainer(DefaultTrainer):
     """
     Extension of the Trainer class adapted to FCCLIP.
+    (DefaultTrainer + Fcclip + MaskAdapter)
     """
 
     @classmethod
@@ -81,9 +82,10 @@ class Trainer(DefaultTrainer):
         hacky if-else logic here.
         """
         if output_folder is None:
-            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
-        evaluator_list = []
-        evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type
+            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference") #output directory
+        evaluator_list = [] 
+        evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type #"ade20k_panoptic_seg", "coco", "coco_panoptic_seg", "sem_seg", "cityscapes_panoptic_seg", "mapillary_vistas_panoptic_seg", "lvis", "cityscapes_instance", "cityscapes_sem_seg"
+
         # semantic segmentation
         if evaluator_type in ["sem_seg", "ade20k_panoptic_seg"]:
             evaluator_list.append(
@@ -96,6 +98,7 @@ class Trainer(DefaultTrainer):
         # instance segmentation
         if evaluator_type == "coco":
             evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
+
         # panoptic segmentation
         if evaluator_type in [
             "coco_panoptic_seg",
@@ -154,7 +157,7 @@ class Trainer(DefaultTrainer):
         return DatasetEvaluators(evaluator_list)
 
     @classmethod
-    def build_train_loader(cls, cfg):
+    def build_train_loader(cls, cfg): #image + label --> mapper --> tensor --> dataloader --> minibatch
         # Semantic segmentation dataset mapper
         if cfg.DATALOADER.SAMPLER_TRAIN == "MultiDatasetSampler":
             mapper = COCOCombineNewBaselineDatasetMapper(cfg, True) 
@@ -162,7 +165,7 @@ class Trainer(DefaultTrainer):
             return data_loader
         else:
             if cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_semantic":
-                mapper = MaskFormerSemanticDatasetMapper(cfg, True)
+                mapper = MaskFormerSemanticDatasetMapper(cfg, True) 
                 return build_detection_train_loader(cfg, mapper=mapper)
             # Panoptic segmentation dataset mapper
             elif cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_panoptic":
@@ -292,7 +295,7 @@ class Trainer(DefaultTrainer):
             for name in cfg.DATASETS.TEST
         ]
         res = cls.test(cfg, model, evaluators)
-        res = OrderedDict({k + "_TTA": v for k, v in res.items()})
+        res = OrderedDict({k + "_TTA": v for k, v in res.items()}) #OrderedDict : maintain the order of keys. if use Dict, the order of keys may be changed.
         return res
 
 
@@ -318,7 +321,7 @@ def setup(args):
     add_fcclip_config(cfg)
     add_mask_adapter_config(cfg)
     cfg.merge_from_file(args.config_file)
-    cfg.merge_from_list(args.opts)
+    cfg.merge_from_list(args.opts) #cfg.merge_from_list(args.opts) : merge from list of options. ex) --opts MODEL.WEIGHTS "path/to/weights.pth"
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "fcclip" module
@@ -327,7 +330,10 @@ def setup(args):
 
 
 def main(args):
-    cfg = setup(args) #config = setup(args)
+    cfg = setup(args) 
+    # python train_net_maskadapter.py --config-file configs/fcclip/fcclip_r50_8xb2-100k_coco_panoptic.yaml --eval-only
+    # args.config_file = "configs/fcclip/fcclip_r50_8xb2-100k_coco_panoptic.yaml"
+    # setup(args) -> get_cfg() -> cfg.merge_from_file(args.config_file) -> cfg.merge_from_list(args.opts) -> cfg.freeze()
 
     if args.eval_only: #if args.eval_only == True, that is evaluation mode using checkpoints
         model = Trainer.build_model(cfg) 
@@ -367,7 +373,7 @@ def main(args):
             res.update(Trainer.test_with_TTA(cfg, model)) # return result with TTA Test res added.
         # result = {'bbox/AP' : 42.1, 'segm/AP' : 37.5, 'bbox/AP_tta' : 43.2, 'segm/AP_tta' : 38.4}
         if comm.is_main_process():
-            verify_results(cfg, res)
+            verify_results(cfg, res) #just verify and make result in only main process. (rank 0)
         return res
 
     trainer = Trainer(cfg)

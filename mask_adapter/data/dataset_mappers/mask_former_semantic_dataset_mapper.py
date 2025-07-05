@@ -1,5 +1,5 @@
 """
-This file may have been modified by Bytedance Ltd. and/or its affiliates (“Bytedance's Modifications”).
+This file may have been modified by Bytedance Ltd. and/or its affiliates (??�Bytedance's Modifications???).
 All Bytedance's Modifications are Copyright (year) Bytedance Ltd. and/or its affiliates. 
 
 Reference: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former/data/dataset_mappers/mask_former_semantic_dataset_mapper.py
@@ -20,8 +20,11 @@ from detectron2.projects.point_rend import ColorAugSSDTransform
 from detectron2.structures import BitMasks, Instances
 
 __all__ = ["MaskFormerSemanticDatasetMapper"]
+# don't need to in this case, but just use conventional expression
 
-
+# read image & annotation --> augmentations --> cropping --> to tensor
+# @configurable : this is a decorator that allows the class to be instantiated with a configuration
+# @configurable --> from_config() --> __init__()
 class MaskFormerSemanticDatasetMapper:
     """
     A callable which takes a dataset dict in Detectron2 Dataset format,
