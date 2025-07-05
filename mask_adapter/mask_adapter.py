@@ -321,10 +321,11 @@ class MASK_Adapter(nn.Module):
         if self.train_maft and self.training :
             dataname = "openvocab_coco_2017_train_stuff_sem_seg"
         else:
-            dataname = batched_inputs[0]['dataname']
-            if self.training:
-                dataname_2 = batched_inputs[1]['dataname']
-                assert dataname == dataname_2, f"expect batch img from same dataset, but different from {dataname} and {dataname_2}"
+            dataname = "openvocab_ade20k_sem_seg_val"
+            # dataname = batched_inputs[0]['dataname']
+            # if self.training:
+            #     dataname_2 = batched_inputs[1]['dataname']
+            #     assert dataname == dataname_2, f"expect batch img from same dataset, but different from {dataname} and {dataname_2}"
 
         images = [x["image"].to(self.device) for x in batched_inputs]
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
