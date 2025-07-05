@@ -1,5 +1,5 @@
 """
-This file may have been modified by Bytedance Ltd. and/or its affiliates (“Bytedance's Modifications”).
+This file may have been modified by Bytedance Ltd. and/or its affiliates (??�Bytedance's Modifications???).
 All Bytedance's Modifications are Copyright (year) Bytedance Ltd. and/or its affiliates. 
 
 Reference: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former/maskformer_model.py

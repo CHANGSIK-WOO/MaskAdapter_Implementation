@@ -1,5 +1,5 @@
 """
-This file may have been modified by Bytedance Ltd. and/or its affiliates (??œBytedance's Modifications???).
+This file may have been modified by Bytedance Ltd. and/or its affiliates.
 All Bytedance's Modifications are Copyright (year) Bytedance Ltd. and/or its affiliates. 
 
 Reference: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former/data/dataset_mappers/mask_former_semantic_dataset_mapper.py
@@ -25,6 +25,12 @@ __all__ = ["MaskFormerSemanticDatasetMapper"]
 # read image & annotation --> augmentations --> cropping --> to tensor
 # @configurable : this is a decorator that allows the class to be instantiated with a configuration
 # @configurable --> from_config() --> __init__()
+# mapper_class = cfg.INPUT.DATASET_MAPPER_NAME  # example : "MaskFormerSemanticDatasetMapper"
+# mapper = mapper_class(cfg=cfg, is_train=True)
+
+# params = MaskFormerSemanticDatasetMapper.from_config(cfg, is_train=True)
+# mapper = MaskFormerSemanticDatasetMapper(**params)
+
 class MaskFormerSemanticDatasetMapper:
     """
     A callable which takes a dataset dict in Detectron2 Dataset format,
@@ -38,7 +44,7 @@ class MaskFormerSemanticDatasetMapper:
     4. Prepare image and annotation to Tensors
     """
 
-    @configurable
+    @configurable 
     def __init__(
         self,
         is_train=True,
@@ -96,12 +102,12 @@ class MaskFormerSemanticDatasetMapper:
 
         augmentation = []
 
-        if cfg.INPUT.RANDOM_FLIP != "none":
+        if cfg.INPUT.RANDOM_FLIP != "none": 
             augmentation.append(
                 T.RandomFlip(
                     horizontal=cfg.INPUT.RANDOM_FLIP == "horizontal",
                     vertical=cfg.INPUT.RANDOM_FLIP == "vertical",
-                )
+                ) #horizontal=True, vertical=False
             )
 
         augmentation.extend([
@@ -109,19 +115,24 @@ class MaskFormerSemanticDatasetMapper:
                 min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
             ),
             T.FixedSizeCrop(crop_size=(image_size, image_size)),
-        ])
+        ]) 
+        # extend() vs append() :
+        # append() adds a single element to the end of the list   
+        # extend() adds multiple elements from an iterable (like a list) to the end of the list
 
         # Assume always applies to the training set.
         dataset_names = cfg.DATASETS.TRAIN
         meta = MetadataCatalog.get(dataset_names[0])
-        ignore_label = meta.ignore_label
+        ignore_label = meta.ignore_label 
+        # usually 255 for semantic segmentation
+        # when padding, the ignore label is used to fill the padded area using 255.
 
         ret = {
-            "is_train": is_train,
-            "augmentations": augmentation,
-            "image_format": cfg.INPUT.FORMAT,
-            "ignore_label": ignore_label,
-            "size_divisibility": cfg.INPUT.SIZE_DIVISIBILITY,
+            "is_train": is_train, # whether this mapper is used for training or inference
+            "augmentations": augmentation, # list of augmentations to apply
+            "image_format": cfg.INPUT.FORMAT, # image format to read the image, e.g., "RGB", "BGR"
+            "ignore_label": ignore_label, # the label that is ignored to evaluation, usually 255 for semantic segmentation
+            "size_divisibility": cfg.INPUT.SIZE_DIVISIBILITY, # pad image size to be divisible by this value
         }
         return ret
 

@@ -2,7 +2,7 @@
 
 _BASE_: ../maskformer2_R50_bs16_50ep.yaml
 MODEL:
-  META_ARCHITECTURE: "MAFT_Plus"  # FCCLIP MAFT_Plus
+  META_ARCHITECTURE: "MASK_Adapter"  # FCCLIP MAFT_Plus
   SEM_SEG_HEAD:
     NAME: "FCCLIPHead"
     NUM_CLASSES: 150
@@ -19,7 +19,7 @@ MODEL:
     EMBED_DIM: 640
     GEOMETRIC_ENSEMBLE_ALPHA: 0.7
     GEOMETRIC_ENSEMBLE_BETA: 1.0
-  rc_weights: 0.1
+  #rc_weights: 0.1
   MASK_FORMER:
     TEST:
       SEMANTIC_ON: True
@@ -46,5 +46,5 @@ TEST:
   EVAL_PERIOD: 2500
 INPUT:
   DATASET_MAPPER_NAME: "mask_former_semantic"  #
-OUTPUT_DIR: ./training/maftp-base/ade20k
+OUTPUT_DIR: ./training/maftp-base/ade20k_150
      
