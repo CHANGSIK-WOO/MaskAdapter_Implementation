@@ -78,17 +78,24 @@ class MASKAdapterHead(nn.Module):
         }
 
     def forward(self, clip_feature, masks):
+        #clip_feature: (B, C, H, W) : #clip_feature from backbone, e.g., {'clip_vis_dense': tensor, 'clip_vis_sparse': tensor, ...}
+        #masks: (B, N, H, W) where N is the number of masks
 
         
-        N = masks.size(1)
-        masks = rearrange(masks, 'B N H W -> (B N) H W').unsqueeze(dim=1)
+        N = masks.size(1) #masks.shape = (B, N, H, W) where N is the number of masks
+        masks = rearrange(masks, 'B N H W -> (B N) H W').unsqueeze(dim=1)  # masks.shape = (B*N, 1, H, W)
         
-        clip_feature = repeat(clip_feature, "B C H W -> (B N) C H W", N=N)
+        clip_feature = repeat(clip_feature, "B C H W -> (B N) C H W", N=N) # repeat() is used to repeat the clip_feature for each mask, so that the shape of clip_feature is (B*N, C, H, W) where N is the number of masks
         
         H,W = clip_feature.shape[-2:]
         masks = F.interpolate(masks.float(), size=(H*4,W*4),
                                                 mode='bilinear', align_corners=False)
         masks = self.mask_downscaling(masks)
+        # self.mask_downscaling = nn.Sequential(
+        # nn.Conv2d(1, C, kernel_size=3, padding=1),
+        # nn.BatchNorm2d(C),
+        # nn.ReLU(inplace=True),
+        # )
         
         outputs = clip_feature + masks
         
@@ -112,7 +119,7 @@ class MASKAdapterHead(nn.Module):
             return outputs
 
         if self.use_checkpoint and self.training:
-            outputs = cp.checkpoint(_inner_forward, outputs,use_reentrant=False)
+            outputs = cp.checkpoint(_inner_forward, outputs, use_reentrant=False)
         else:
             outputs = _inner_forward(outputs)
         return outputs

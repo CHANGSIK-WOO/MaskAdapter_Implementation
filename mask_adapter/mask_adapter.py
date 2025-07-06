@@ -111,8 +111,11 @@ class MASK_Adapter(nn.Module):
             size_divisibility = self.backbone.size_divisibility
         self.size_divisibility = size_divisibility
         self.sem_seg_postprocess_before_inference = sem_seg_postprocess_before_inference
-        self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False)
-        self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(-1, 1, 1), False)
+        self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False) # shape : (3,) -> (3, 1, 1) -> after broadcasting, it will be (B, 3, H, W)
+        self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(-1, 1, 1), False) # shape : (3,) -> (3, 1, 1) -> after broadcasting, it will be (B, 3, H, W)
+        # regiter_buffer(name, tensor, persistent=True) registers a tensor as a buffer in the module.
+        # buffers are tensors that are not considered model parameters, but are part of the module's state.
+        # They are saved in the module's state_dict and can be moved to GPU or CPU like parameters.
 
         # additional args
         self.semantic_on = semantic_on
@@ -259,6 +262,14 @@ class MASK_Adapter(nn.Module):
         losses = ["labels"]
 
         train_metadata = {i: MetadataCatalog.get(i) for i in cfg.DATASETS.TRAIN}
+        # >>> print(train_metadata)
+        # {
+        #     'openvocab_ade20k_sem_seg_train': Metadata(evaluator_type='sem_seg', 
+        #                                                stuff_classes=['wall', 'building', ..., 'floor'], 
+        #                                                image_root='/path/to/train/images',
+        #                                                sem_seg_root='/path/to/train/annotations',
+        #                                                evaluator_type='sem_seg')
+        # }
         test_metadata = {i: MetadataCatalog.get(i) for i in cfg.DATASETS.TEST}
 
         return {
