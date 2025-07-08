@@ -49,7 +49,7 @@ from detectron2.evaluation import (
 
 )
 
-from .mask_adapter.evaluation import SeenUnseenSemSegEvaluator #import SeenUnseenSemSegEvaluator from mask_adapter.evaluation.sem_seg_evaluation.py
+from mask_adapter.evaluation import SeenUnseenSemSegEvaluator #import SeenUnseenSemSegEvaluator from mask_adapter.evaluation.sem_seg_evaluation.py
 
 from detectron2.projects.deeplab import add_deeplab_config, build_lr_scheduler
 from detectron2.solver.build import maybe_add_gradient_clipping
@@ -92,7 +92,7 @@ class Trainer(DefaultTrainer):
         # semantic segmentation
         if evaluator_type in ["sem_seg", "ade20k_panoptic_seg"]:
             evaluator_list.append(
-                SemSegEvaluator(
+                SeenUnseenSemSegEvaluator(
                     dataset_name,
                     distributed=True,
                     output_dir=output_folder,

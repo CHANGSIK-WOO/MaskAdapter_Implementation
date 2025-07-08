@@ -14,7 +14,7 @@ from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.utils.comm import all_gather, is_main_process, synchronize
 from detectron2.utils.file_io import PathManager
 
-from detectron2.evaluator import DatasetEvaluator
+from detectron2.evaluation import DatasetEvaluator
 from ..data.datasets.class_list import (
     ade_common_ids,
     ade_only_ids,)
@@ -234,7 +234,7 @@ class SeenUnseenSemSegEvaluator(DatasetEvaluator):
                 torch.save(res, f)
 
         def compute_group_iou(iou_array, valid_mask, class_ids):
-            mask = [i for i in class_ids if valid_mask[i]]
+            mask = [i for i in class_ids if i < len(valid_mask) and valid_mask[i]]
             if len(mask) == 0:
                 return float('nan')
             return 100 * float(np.sum(iou_array[mask]) / len(mask))
