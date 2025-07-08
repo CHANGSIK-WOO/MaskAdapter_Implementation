@@ -31,5 +31,10 @@ from . import (
     openseg_classes
 )
 
+from .class_list import (
+    ade_common_ids,
+    ade_only_ids,
+)
+
 #from .register_grand_data import register_all_grand
 # from .register_objects365 import register_all_obj365v1
