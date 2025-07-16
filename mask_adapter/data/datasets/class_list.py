@@ -1,6 +1,6 @@
 # path
-ade20k_path = r"/content/MaskAdapter_Implementation/mask_adapter/data/datasets/ade20k_150_with_prompt_eng.txt"
-coco_path = r"/content/MaskAdapter_Implementation/mask_adapter/data/datasets/coco_stuff_with_prompt_eng.txt"
+ade20k_path = r"C:\Users\woo chang sik\PythonProject\MaskAdapter_Implementation\mask_adapter\data\datasets\ade20k_150_with_prompt_eng.txt"
+coco_path = r"C:\Users\woo chang sik\PythonProject\MaskAdapter_Implementation\mask_adapter\data\datasets\coco_stuff_with_prompt_eng.txt"
 
 # open file and parsing
 def parse_class_file(path):
@@ -34,5 +34,6 @@ for ade_id, ade_names in ade_classes.items():
     if not is_common:
         ade_only_ids.append(ade_id)
 
-print(ade_common_ids)
+print(common_ids_tuple)
+print("\n")
 print(ade_only_ids)

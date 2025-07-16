@@ -209,9 +209,9 @@ class Trainer(DefaultTrainer):
         weight_decay_norm = cfg.SOLVER.WEIGHT_DECAY_NORM
         weight_decay_embed = cfg.SOLVER.WEIGHT_DECAY_EMBED
 
-        defaults = {}
-        defaults["lr"] = cfg.SOLVER.BASE_LR
-        defaults["weight_decay"] = cfg.SOLVER.WEIGHT_DECAY
+        defaults = {} 
+        defaults["lr"] = cfg.SOLVER.BASE_LR #   cfg.SOLVER.BASE_LR = 0.0001
+        defaults["weight_decay"] = cfg.SOLVER.WEIGHT_DECAY #   cfg.SOLVER.WEIGHT_DECAY = 0.01
 
         norm_module_types = (
             torch.nn.BatchNorm1d,
@@ -230,7 +230,11 @@ class Trainer(DefaultTrainer):
         params: List[Dict[str, Any]] = []
         memo: Set[torch.nn.parameter.Parameter] = set()
         for module_name, module in model.named_modules():
+            #example of module_name : "backbone", "backbone.body", "backbone.body.layer1", "backbone.body.layer1.conv1", "mask_head", "mask_head.mask_decoder"
+            #example of module : nn.Module, nn.Linear, nn.Conv2d, nn.BatchNorm2d, nn.LayerNorm, nn.Embedding, etc.
             for module_param_name, value in module.named_parameters(recurse=False):
+                #example of module_param_name : "weight", "bias", "relative_position_bias_table", "absolute_pos_embed", "text_projection"
+                #example of value : torch.Size([256, 256]), torch.Size([256]), torch.Size([49, 256]), torch.Size([1, 256, 14, 14]), torch.Size([512, 512])
                 if not value.requires_grad:
                     continue
                 # Avoid duplicating parameters
@@ -240,17 +244,22 @@ class Trainer(DefaultTrainer):
 
                 hyperparams = copy.copy(defaults)
                 if "backbone" in module_name:
-                    hyperparams["lr"] = hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER
+                    hyperparams["lr"] = hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER 
+                    # normally, cfg.SOLVER.BACKBONE_MULTIPLIER = 0.1, so backbone learning rate is 10 times smaller than head learning rate.
+                    # the reason is that backbone is pretrained, so we don't need to train it with high learning rate.
                 if (
                     "relative_position_bias_table" in module_param_name
                     or "absolute_pos_embed" in module_param_name
                 ):
                     print(module_param_name)
-                    hyperparams["weight_decay"] = 0.0
+                    hyperparams["weight_decay"] = 0.0 
+                    #position embedding parameters should not be regularized with weight decay.
                 if isinstance(module, norm_module_types):
                     hyperparams["weight_decay"] = weight_decay_norm
+                    # norm parameters should not be regularized with weight decay.
                 if isinstance(module, torch.nn.Embedding):
                     hyperparams["weight_decay"] = weight_decay_embed
+                    # embedding parameters should not be regularized with weight decay.
                 params.append({"params": [value], **hyperparams})
 
         def maybe_add_full_model_gradient_clipping(optim):
